@@ -98,7 +98,7 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
           DOCKERHUB_REPOSITORY: ${{ steps.prep.outputs.image }}
 
       - name: Image digest
