@@ -28,7 +28,7 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          DOCKER_IMAGE=name/app
+          DOCKER_IMAGE=criticalmanufacturing/repository
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -83,8 +83,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           labels: |
-            org.opencontainers.image.title=${{ github.event.repository.name }}
-            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.title="Critical Manufacturing Repository"
+            org.opencontainers.image.description="Critical Manufacturing Repository with integrated authentication plugin"
             org.opencontainers.image.url=${{ github.event.repository.html_url }}
             org.opencontainers.image.source=${{ github.event.repository.clone_url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
