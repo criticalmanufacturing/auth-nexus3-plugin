@@ -50,6 +50,7 @@ jobs:
           elif [ "${{ github.event_name }}" = "push" ]; then
             TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
           fi
+          echo ::set-output name=image::${DOCKER_IMAGE}
           echo ::set-output name=version::${VERSION}
           echo ::set-output name=tags::${TAGS}
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -91,6 +92,14 @@ jobs:
             org.opencontainers.image.created=${{ steps.prep.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+          DOCKERHUB_REPOSITORY: ${{ steps.prep.outputs.image }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
