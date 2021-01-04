@@ -29,7 +29,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=criticalmanufacturing/nexus
-          BASE_VERSION=3.27.0
+          BASE_VERSION=3.29.0
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -83,8 +83,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.prep.outputs.tags }}
           labels: |
-            org.opencontainers.image.title="Critical Manufacturing Repository"
-            org.opencontainers.image.description="Critical Manufacturing Repository with integrated authentication plugin"
+            org.opencontainers.image.title='Critical Manufacturing Repository'
+            org.opencontainers.image.description='Critical Manufacturing Repository with integrated authentication plugin'
             org.opencontainers.image.url=${{ github.event.repository.html_url }}
             org.opencontainers.image.source=${{ github.event.repository.clone_url }}
             org.opencontainers.image.version=${{ steps.prep.outputs.version }}
