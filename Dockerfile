@@ -1,6 +1,4 @@
 FROM maven:3-jdk-8 as builder
-MAINTAINER matt.brewster@base2s.com
-
 WORKDIR /build
 COPY pom.xml /build
 RUN mvn verify clean --fail-never
