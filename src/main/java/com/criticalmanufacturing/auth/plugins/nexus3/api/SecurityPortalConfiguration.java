@@ -28,10 +28,10 @@ public class SecurityPortalConfiguration {
     // Default values
     private static final String DEFAULT_CLIENT_ID = "Applications";
     private static final String DEFAULT_METADATA_URL = "https://security.criticalmanufacturing.com/tenant/CustomerPortal/.well-known/openid-configuration";
-    private static final int DEFAULT_REQUEST_CONNECTION_REQUEST_TIMEOUT = -1;
-    private static final int DEFAULT_REQUEST_SOCKET_TIMEOUT = -1;
-    private static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = -1;
-    private static final Duration DEFAULT_PRINCIPAL_CACHE_TTL = Duration.ofMinutes(1);
+    private static final int DEFAULT_REQUEST_CONNECTION_REQUEST_TIMEOUT = 30000;
+    private static final int DEFAULT_REQUEST_SOCKET_TIMEOUT = 30000;
+    private static final int DEFAULT_REQUEST_CONNECT_TIMEOUT = 30000;
+    private static final Duration DEFAULT_PRINCIPAL_CACHE_TTL = Duration.ofMinutes(30);
 
 
     private Properties configuration;

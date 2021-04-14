@@ -64,7 +64,7 @@ public class AuthenticatingRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         Principal user = (Principal) principals.getPrimaryPrincipal();
-        LOGGER.info("doGetAuthorizationInfo for user {} with roles {}", user.getUsername(), user.getRoles().stream().collect(Collectors.joining(", ")));
+        LOGGER.info("doGetAuthorizationInfo for user {} with {} roles", user.getUsername(), user.getRoles().size());
         return new SimpleAuthorizationInfo(user.getRoles());
 
     }

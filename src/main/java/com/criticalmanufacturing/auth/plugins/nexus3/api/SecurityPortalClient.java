@@ -58,7 +58,7 @@ public class SecurityPortalClient {
     }
 
     private void init() {
-
+        LOGGER.info("Initializing Security Portal Client...");
         if (this.client == null) {
 
             RequestConfig config = RequestConfig.custom()
@@ -188,6 +188,7 @@ public class SecurityPortalClient {
                 throw new AuthenticationException("Exchange tokens error");
             }
 
+            LOGGER.info("Tokens exchanged. Handling response...");
             SecurityPortalTokenResponse tokens = serializeObject(response, SecurityPortalTokenResponse.class);
 
             return tokens;
@@ -212,6 +213,7 @@ public class SecurityPortalClient {
         SecurityPortalUser user = getUserInformation(tokens);
         SecurityPortalRolesResponse roles = getUserRoles(tokens);
 
+        LOGGER.info("Creating Principal");
         Principal principal = new Principal();
 
         principal.setOauthToken(tokens.getAccessToken().toCharArray());
@@ -226,7 +228,7 @@ public class SecurityPortalClient {
         String cacheKey = token;
         Principal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
         if (cached != null) {
-            LOGGER.debug("Using cached principal for login: {}", cached.getUsername());
+            LOGGER.info("Using cached principal for login: {}", cached.getUsername());
             return cached;
         } else {
             Principal principal = doAuthz(login, token);
