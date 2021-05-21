@@ -229,13 +229,13 @@ public class SecurityPortalClient {
 
     public Principal authz(String login, String token) throws AuthenticationException {
 
-         String cacheKey = token;
+        String cacheKey = token;
         Principal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
         if (cached != null) {
             LOGGER.info("Using cached principal for login: {}", cached.getUsername());
             return cached;
         } else {
-             Principal principal = doAuthz(login, token);
+            Principal principal = doAuthz(login, token);
             tokenToPrincipalCache.put(cacheKey, principal);
             return principal;
         }
