@@ -15,6 +15,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +68,12 @@ public class SecurityPortalClient {
                     .setSocketTimeout(configuration.getRequestSocketTimeout())
                     .build();
 
+            PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager(60, TimeUnit.SECONDS);
+
             client = HttpClientBuilder
                     .create()
                     .setDefaultRequestConfig(config)
+                    .setConnectionManager(manager)
                     .build();
         }
 
@@ -225,13 +229,13 @@ public class SecurityPortalClient {
 
     public Principal authz(String login, String token) throws AuthenticationException {
 
-        String cacheKey = token;
+         String cacheKey = token;
         Principal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
         if (cached != null) {
             LOGGER.info("Using cached principal for login: {}", cached.getUsername());
             return cached;
         } else {
-            Principal principal = doAuthz(login, token);
+             Principal principal = doAuthz(login, token);
             tokenToPrincipalCache.put(cacheKey, principal);
             return principal;
         }
