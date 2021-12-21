@@ -6,7 +6,7 @@ COPY . /build
 RUN mvn -PbuildKar clean package
 
 
-FROM sonatype/nexus3:3.32.0
+FROM sonatype/nexus3:3.37.1
 USER root
 COPY --from=builder /build/target/plugins-nexus3*.kar /opt/sonatype/nexus/deploy
 USER nexus
