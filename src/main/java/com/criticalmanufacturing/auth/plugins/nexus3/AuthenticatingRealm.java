@@ -90,7 +90,13 @@ public class AuthenticatingRealm extends AuthorizingRealm {
             authenticatedPrincipal = securityPortalClient.authz(t.getUsername(), new String(t.getPassword()));
             LOGGER.info("Successfully authenticated {}", t.getUsername());
         } catch (SecurityPortalException e) {
-            LOGGER.warn("Failed authentication", e);
+            String errToken = new String(t.getPassword());
+            if (errToken.length() > 4) {
+                errToken = errToken.substring(errToken.length() - 4);
+            }
+
+            LOGGER.warn("Failed authentication for token ***{}", errToken);
+            LOGGER.debug("Detailed authentication error", e);
             return null;
         }
 
