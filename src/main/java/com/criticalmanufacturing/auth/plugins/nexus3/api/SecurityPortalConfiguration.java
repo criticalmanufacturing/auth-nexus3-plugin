@@ -41,7 +41,7 @@ public class SecurityPortalConfiguration {
 
         try {
             configuration.load(Files.newInputStream(Paths.get(".", "etc", CONFIG_FILE)));
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.warn("Error reading Critical Manufacturing OIDC properties, falling back to default configuration", e);
         }
     }

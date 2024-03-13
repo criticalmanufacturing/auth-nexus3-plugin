@@ -15,14 +15,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.stream.Collectors;
 
 @Singleton
 @Named
 @Description("Critical Manufacturing Authentication Realm")
 public class AuthenticatingRealm extends AuthorizingRealm {
 
-    private SecurityPortalClient securityPortalClient;
+    private final SecurityPortalClient securityPortalClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticatingRealm.class);
 
@@ -90,7 +89,7 @@ public class AuthenticatingRealm extends AuthorizingRealm {
         try {
             authenticatedPrincipal = securityPortalClient.authz(t.getUsername(), new String(t.getPassword()));
             LOGGER.info("Successfully authenticated {}", t.getUsername());
-        } catch (com.criticalmanufacturing.auth.plugins.nexus3.AuthenticationException e) {
+        } catch (SecurityPortalException e) {
             LOGGER.warn("Failed authentication", e);
             return null;
         }

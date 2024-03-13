@@ -7,7 +7,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="nexus3" />
-        <module name="auth-nexus3-plugin" />
+        <module name="plugins-nexus3" />
       </profile>
     </annotationProcessing>
   </component>

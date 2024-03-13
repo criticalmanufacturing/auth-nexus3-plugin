@@ -29,7 +29,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=criticalmanufacturing/nexus
-          BASE_VERSION=3.63.0
+          BASE_VERSION=3.66.0
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly

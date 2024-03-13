@@ -2,6 +2,7 @@ package com.criticalmanufacturing.auth.plugins.nexus3.api;
 
 import com.criticalmanufacturing.auth.plugins.nexus3.AuthenticationException;
 import com.criticalmanufacturing.auth.plugins.nexus3.Principal;
+import com.criticalmanufacturing.auth.plugins.nexus3.SecurityPortalException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
@@ -40,6 +41,8 @@ public class SecurityPortalClient {
 
     private ObjectMapper mapper;
     private Cache<String, Principal> tokenToPrincipalCache;
+
+    private Cache<String, Integer> tokenToErrorCodeCache;
 
     public SecurityPortalClient() {
         init();
@@ -82,6 +85,10 @@ public class SecurityPortalClient {
         tokenToPrincipalCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(configuration.getPrincipalCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
                 .build();
+
+        tokenToErrorCodeCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(configuration.getPrincipalCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
+                .build();
     }
 
     private <T> T serializeObject(HttpResponse response, Class<T> clazz) throws AuthenticationException {
@@ -96,22 +103,39 @@ public class SecurityPortalClient {
         }
     }
 
+    private int validateStatusCode(HttpResponse response, String operation, String token) throws SecurityPortalException {
+        int statusCode = response.getStatusLine().getStatusCode();
 
-    private OidcMetadata getOidcInformation() throws AuthenticationException {
+        SecurityPortalException exp;
+        if (statusCode != 200) {
+            switch (statusCode) {
+                case 401:
+                case 403:
+                    exp = new AuthenticationException("Error while " + operation, statusCode, token);
+                    LOGGER.warn("Error while " + operation, exp);
+
+                    throw exp;
+                default:
+                    exp = new SecurityPortalException("Failed while " + operation, statusCode);
+                    LOGGER.error("Failed while " + operation, exp);
+                    throw exp;
+            }
+        }
+
+        return statusCode;
+    }
+
+
+    private OidcMetadata getOidcInformation() throws SecurityPortalException {
         LOGGER.info("Fetching OIDC information...");
         HttpGet oidcRequest = new HttpGet(this.configuration.getMetadataUrl());
 
         try {
             HttpResponse response = this.client.execute(oidcRequest);
 
-            if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Unable to fetch OIDC metadata from {}", response.getStatusLine().getStatusCode());
-                throw new AuthenticationException("OIDC metadata fetch error");
-            }
+            validateStatusCode(response, "Fetching OIDC metadata", null);
 
-            OidcMetadata metadata = serializeObject(response, OidcMetadata.class);
-
-            return metadata;
+            return serializeObject(response, OidcMetadata.class);
 
         } catch (IOException e) {
             throw new AuthenticationException(e);
@@ -121,58 +145,52 @@ public class SecurityPortalClient {
 
     }
 
-    private SecurityPortalUser getUserInformation(SecurityPortalTokenResponse tokens) throws  AuthenticationException {
+    private SecurityPortalUser getUserInformation(SecurityPortalTokenResponse tokens) throws  SecurityPortalException {
 
         LOGGER.info("Fetching User Information");
 
+        String token = tokens.getAccessToken();
+
         HttpGet httpGetUser = new HttpGet(this.oidcMetadata.getUserinfoEndpoint());
-        httpGetUser.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken());
+        httpGetUser.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
 
         try {
             HttpResponse response = this.client.execute(httpGetUser);
 
-            if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Unable to retrieve user information. Status code {}", response.getStatusLine().getStatusCode());
-                throw new AuthenticationException("Unable to retrieve user information");
-            }
+            validateStatusCode(response,"Retrieving User Information", token);
 
-            SecurityPortalUser securityPortalUser = serializeObject(response, SecurityPortalUser.class);
-
-            return securityPortalUser;
+            return serializeObject(response, SecurityPortalUser.class);
 
         } catch (IOException e) {
-            throw new AuthenticationException(e);
+            throw new SecurityPortalException(e);
         } finally {
             httpGetUser.releaseConnection();
         }
     }
 
-    private SecurityPortalRolesResponse getUserRoles(SecurityPortalTokenResponse tokens) throws AuthenticationException {
+    private SecurityPortalRolesResponse getUserRoles(SecurityPortalTokenResponse tokens) throws SecurityPortalException {
         LOGGER.info("Fetching User Roles");
 
+        String token = tokens.getAccessToken();
+
         HttpGet httpGetUserRoles = new HttpGet(this.oidcMetadata.getUserinfoEndpoint() + "/roles");
-        httpGetUserRoles.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getAccessToken());
+        httpGetUserRoles.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
 
         try {
             HttpResponse response = this.client.execute(httpGetUserRoles);
 
-            if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Unable to retrieve user roles. Status code {}", response.getStatusLine().getStatusCode());
-                throw new AuthenticationException("Unable to retrieve user roles");
-            }
+            validateStatusCode(response,"Retrieving User Roles", token);
 
-            SecurityPortalRolesResponse securityPortalRolesResponse = serializeObject(response, SecurityPortalRolesResponse.class);
-
-            return securityPortalRolesResponse;
+            return serializeObject(response, SecurityPortalRolesResponse.class);
 
         } catch (IOException e) {
-            throw new AuthenticationException(e);
+            throw new SecurityPortalException(e);
         } finally {
             httpGetUserRoles.releaseConnection();
         }
     }
 
-    private SecurityPortalTokenResponse exchangeToken(String clientId, String token) throws AuthenticationException {
+    private SecurityPortalTokenResponse exchangeToken(String clientId, String token) throws SecurityPortalException {
         LOGGER.info("Exchanging tokens...");
 
         HttpPost httpPost = new HttpPost(this.oidcMetadata.getTokenEndpoint());
@@ -187,24 +205,19 @@ public class SecurityPortalClient {
             httpPost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
             HttpResponse response = this.client.execute(httpPost);
 
-            if (response.getStatusLine().getStatusCode() != 200) {
-                LOGGER.warn("Unable to exchange token from {}", response.getStatusLine().getStatusCode());
-                throw new AuthenticationException("Exchange tokens error");
-            }
+            validateStatusCode(response,"Exchanging Tokens", token);
 
             LOGGER.info("Tokens exchanged. Handling response...");
-            SecurityPortalTokenResponse tokens = serializeObject(response, SecurityPortalTokenResponse.class);
-
-            return tokens;
+            return serializeObject(response, SecurityPortalTokenResponse.class);
 
         } catch (IOException e) {
-            throw new AuthenticationException(e);
+            throw new SecurityPortalException(e);
         } finally {
             httpPost.releaseConnection();
         }
     }
 
-    private Principal doAuthz(String loginName, String token) throws AuthenticationException {
+    private Principal doAuthz(String loginName, String token) throws SecurityPortalException {
 
         if (oidcMetadata == null) {
             oidcMetadata = getOidcInformation();
@@ -227,17 +240,34 @@ public class SecurityPortalClient {
         return principal;
     }
 
-    public Principal authz(String login, String token) throws AuthenticationException {
+    public Principal authz(String login, String token) throws SecurityPortalException {
 
         String cacheKey = token;
-        Principal cached = tokenToPrincipalCache.getIfPresent(cacheKey);
-        if (cached != null) {
-            LOGGER.info("Using cached principal for login: {}", cached.getUsername());
-            return cached;
-        } else {
+        Principal cachedPrincipal = tokenToPrincipalCache.getIfPresent(cacheKey);
+        if (cachedPrincipal != null) {
+            LOGGER.info("Using cached principal for login: {}", cachedPrincipal.getUsername());
+            return cachedPrincipal;
+        }
+
+        // Check if this token was previously used but returned an error code
+        Integer cachedErrorCode = tokenToErrorCodeCache.getIfPresent(cacheKey);
+        if (cachedErrorCode != null) {
+            LOGGER.info("Token cached as invalid. Not authenticating...");
+            throw new AuthenticationException("Token already cached with error", cachedErrorCode, token);
+        }
+
+        // If it reaches this point, then it means we don't have this token cached.
+        // Authenticating user
+
+        try {
             Principal principal = doAuthz(login, token);
             tokenToPrincipalCache.put(cacheKey, principal);
+
             return principal;
+        } catch (AuthenticationException e) {
+            tokenToErrorCodeCache.put(cacheKey, 401);
+            LOGGER.info("Caching token due to an authentication error");
+            throw e;
         }
     }
 
