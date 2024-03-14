@@ -1,6 +1,6 @@
 package com.criticalmanufacturing.auth.plugins.nexus3;
 
-public class SecurityPortalException extends Exception {
+public class SecurityPortalException extends Throwable {
     private int statusCode;
 
     public int getStatusCode() {
@@ -19,5 +19,10 @@ public class SecurityPortalException extends Exception {
 
     public SecurityPortalException(Throwable cause) {
         super(cause);
+    }
+
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return this;
     }
 }

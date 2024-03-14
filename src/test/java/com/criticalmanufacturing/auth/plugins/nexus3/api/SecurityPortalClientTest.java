@@ -144,7 +144,7 @@ public class SecurityPortalClientTest {
     }
 
     @Test
-    public void shouldDoMockAuthz() throws Exception {
+    public void shouldDoMockAuthz() throws Throwable {
         HttpClient mockClient = fullyFunctionalMockClient();
 
         SecurityPortalClient clientToTest = new SecurityPortalClient(mockClient, new MockSecurityPortalConfiguration());
@@ -157,7 +157,7 @@ public class SecurityPortalClientTest {
     }
 
     @Test
-    public void shouldCacheInvalidTokens() throws Exception {
+    public void shouldCacheInvalidTokens() throws Throwable {
         String userName = "JSilva";
         String token = "12312313";
 
