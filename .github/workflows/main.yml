@@ -30,7 +30,7 @@ jobs:
         id: prep
         run: |
           DOCKER_IMAGE=criticalmanufacturing/nexus
-          BASE_VERSION=3.72.0
+          BASE_VERSION=3.73.0
           VERSION=noop
           if [ "${{ github.event_name }}" = "schedule" ]; then
             VERSION=nightly
@@ -62,7 +62,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
         
       - name: Cache Docker layers
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}

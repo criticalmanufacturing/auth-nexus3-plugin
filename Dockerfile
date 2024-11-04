@@ -6,7 +6,7 @@ COPY . /build
 RUN mvn -PbuildKar -Dmaven.buildNumber.skip clean package
 
 
-FROM sonatype/nexus3:3.72.0-java17-ubi
+FROM sonatype/nexus3:3.73.0-java17-ubi
 USER root
 COPY --from=builder /build/target/plugins-nexus3*.kar /opt/sonatype/nexus/deploy
 # Setting default configuration using Nexus recommendations
