@@ -1,4 +1,4 @@
-FROM maven:3.9.9-amazoncorretto-11 AS builder
+FROM maven:3.9.9-amazoncorretto-17 AS builder
 WORKDIR /build
 COPY pom.xml /build
 RUN mvn verify clean --fail-never
@@ -6,7 +6,7 @@ COPY . /build
 RUN mvn -PbuildKar -Dmaven.buildNumber.skip clean package
 
 
-FROM sonatype/nexus3:3.70.2-java11-ubi
+FROM sonatype/nexus3:3.72.0-java17-ubi
 USER root
 COPY --from=builder /build/target/plugins-nexus3*.kar /opt/sonatype/nexus/deploy
 # Setting default configuration using Nexus recommendations
